@@ -29,9 +29,11 @@ hasBlackKingMoved = False # for the castle
 hasWhiteKingMoved = False # for the castle
 moveLog = []
 
+movesAvailable = [] # to draw on the board the available moves
+
 squareSize = HEIGHT//DIMENSION
 
-board = [
+board = initialBoard = [
     ["bR", "bN", "bB", "bQ", "bK", "bB", "bN", "bR"],
     ["bP", "bP", "bP", "bP", "bP", "bP", "bP", "bP"],
     ["--", "--", "--", "--", "--", "--", "--", "--"],
@@ -61,12 +63,17 @@ def showText(text,x,y):
     text = font.render(text, True, (0, 0, 0))
     screen.blit(text, (x,y))
 
-def drawBoard():
-    colors = [pygame.Color((240,217,182)), pygame.Color((181,136,99))] #my chess.com colors :D
+def drawBoard(legalMoves):
+    colorsBoard = [pygame.Color((240,217,182)), pygame.Color((181,136,99))] #my chess.com colors :D
+    colorsSelected = [pygame.Color("yellow"), pygame.Color("yellow4")]
     for r in range(DIMENSION):
         for c in range(DIMENSION):
-            color = colors[((r+c)%2)]
-            pygame.draw.rect(screen, color, pygame.Rect(c*squareSize, r*squareSize, squareSize, squareSize))
+            if (r,c) in legalMoves:
+                color = colorsSelected[((r+c)%2)]
+                pygame.draw.rect(screen, color, pygame.Rect(c*squareSize, r*squareSize, squareSize, squareSize))
+            else:
+                color = colorsBoard[((r+c)%2)]
+                pygame.draw.rect(screen, color, pygame.Rect(c*squareSize, r*squareSize, squareSize, squareSize))
 
 def drawPieces():
     for r in range(DIMENSION):
@@ -177,9 +184,10 @@ def getAllLegalMoves(player):
     for r in range(DIMENSION):
         for c in range(DIMENSION):
             piece = board[r][c]
-            if piece[0].lower() == "b" and player == -1:
+            p = piece[0].lower()
+            if p == "b" and player == -1:
                 moves.append(((r,c),getAllLegalMovesWithPiece(piece, (r,c))))
-            elif piece[0].lower() == "w" and player == 1:
+            elif p == "w" and player == 1:
                 moves.append(((r,c),getAllLegalMovesWithPiece(piece, (r,c))))
             else:
                 continue
@@ -399,8 +407,11 @@ def main():
 
         #screen.fill(pygame.Color("brown"))
         screen.fill((120,120,120))
-
-        drawBoard()
+        
+        if not playerClicks:
+            drawBoard([])
+        else:
+            drawBoard(getAllLegalMovesWithPiece(getPieceAtLocation(playerClicks[0]), playerClicks[0]))
         drawPieces()
 
         showText(text0, textX, textY0)
